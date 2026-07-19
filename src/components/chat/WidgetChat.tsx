@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useArkanChat, type ChatMsg } from "@/lib/useArkanChat";
 import { renderBold } from "./format";
-import VoiceAgent from "./VoiceAgent";
 
 const SITE_URL = "https://arkan-website-chatbot.vercel.app";
 
@@ -19,17 +18,11 @@ export default function WidgetChat({
     storageKey: "arkan_widget_conv",
   });
   const [input, setInput] = useState("");
-  const [voiceOpen, setVoiceOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
-
-  // اگر ویجت با ?voice=1 باز شده باشد (از دکمه‌ی میکروفون)، مستقیم حالت صوتی
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("voice") === "1") setVoiceOpen(true);
-  }, []);
 
   function submit() {
     if (!input.trim() || loading) return;
@@ -41,7 +34,7 @@ export default function WidgetChat({
   const empty = messages.length === 0;
 
   return (
-    <div className="relative flex h-dvh flex-col bg-bone">
+    <div className="flex h-dvh flex-col bg-bone">
       {/* هدر فشرده */}
       <header className="flex items-center gap-2.5 px-4 py-3 text-bone" style={{ backgroundColor: primaryColor }}>
         <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
@@ -51,38 +44,7 @@ export default function WidgetChat({
           <p className="font-heading text-[0.95rem] font-bold">دستیار آرکان</p>
           <p className="text-[0.7rem] opacity-80">معمولاً سریع پاسخ می‌دهد</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setVoiceOpen(true)}
-          className="mr-auto inline-flex items-center gap-1.5 rounded-btn bg-white/15 px-2.5 py-1.5 text-[0.75rem] font-medium text-bone transition-colors hover:bg-white/25"
-          aria-label="گفتگوی صوتی"
-        >
-          <MicIcon />
-          صوتی
-        </button>
       </header>
-
-      {voiceOpen && (
-        <div className="absolute inset-0 z-20 flex flex-col bg-bone">
-          <header className="flex items-center justify-between px-4 py-3 text-bone" style={{ backgroundColor: primaryColor }}>
-            <p className="font-heading text-[0.95rem] font-bold">گفتگوی صوتی</p>
-            <button
-              type="button"
-              onClick={() => setVoiceOpen(false)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
-              aria-label="بستن گفتگوی صوتی"
-            >
-              <CloseIcon />
-            </button>
-          </header>
-          <div className="flex-1 overflow-y-auto px-4 py-6">
-            <p className="mb-4 text-center text-[0.8rem] text-slate">
-              مستقیم با دستیار آرکان صحبت کنید — سؤال‌تان را بپرسید و پاسخ را بشنوید.
-            </p>
-            <VoiceAgent primaryColor={primaryColor} />
-          </div>
-        </div>
-      )}
 
       {/* پیام‌ها */}
       <div ref={scrollRef} className="flex-1 space-y-3.5 overflow-y-auto px-4 py-4">
@@ -245,21 +207,6 @@ function SparkIcon() {
   return (
     <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 3l1.8 4.9L18.7 9l-4.9 1.1L12 15l-1.8-4.9L5.3 9l4.9-1.1z" />
-    </svg>
-  );
-}
-function MicIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="9" y="3" width="6" height="11" rx="3" />
-      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-    </svg>
-  );
-}
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   );
 }
