@@ -75,16 +75,58 @@
       }
     }
 
-    btn.addEventListener("click", function () {
-      isOpen = !isOpen;
-      iframe.style.display = isOpen ? "block" : "none";
+    // حالت جاری iframe: "chat" | "voice" (src اولیه /widget است)
+    var mode = "chat";
+    function show(open) {
+      isOpen = open;
+      iframe.style.display = open ? "block" : "none";
       render();
+    }
+    function ensureMode(m) {
+      if (mode !== m) {
+        iframe.src = BASE + "/widget" + (m === "voice" ? "?voice=1" : "");
+        mode = m;
+      }
+    }
+
+    btn.addEventListener("click", function () {
+      if (isOpen && mode === "chat") show(false);
+      else { ensureMode("chat"); show(true); }
     });
+
+    // دکمه‌ی گفتگوی صوتی (میکروفون) — همیشه پیدا، کنار حباب چت
+    var micBtn = document.createElement("button");
+    micBtn.type = "button";
+    micBtn.setAttribute("aria-label", "گفتگوی صوتی با دستیار");
+    micBtn.style.cssText =
+      "display:inline-flex;align-items:center;justify-content:center;border:0;cursor:pointer;" +
+      "width:48px;height:48px;background:" + bone + ";color:" + color + ";border-radius:50%;" +
+      "box-shadow:0 6px 22px rgba(20,58,50,0.28);border:2px solid " + color + ";transition:transform .15s ease;";
+    micBtn.innerHTML = micSvg();
+    micBtn.onmouseenter = function () { micBtn.style.transform = "translateY(-2px)"; };
+    micBtn.onmouseleave = function () { micBtn.style.transform = "none"; };
+    micBtn.addEventListener("click", function () {
+      if (isOpen && mode === "voice") show(false);
+      else { ensureMode("voice"); show(true); }
+    });
+
+    // ردیف دکمه‌ها (میکروفون + حباب چت)
+    var bar = document.createElement("div");
+    bar.style.cssText = "display:flex;align-items:center;gap:10px;";
+    bar.appendChild(micBtn);
+    bar.appendChild(btn);
 
     render();
     root.appendChild(iframe);
-    root.appendChild(btn);
+    root.appendChild(bar);
     document.body.appendChild(root);
+  }
+
+  function micSvg() {
+    return (
+      '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+      '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>'
+    );
   }
 
   function chatSvg() {

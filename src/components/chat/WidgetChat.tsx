@@ -26,6 +26,11 @@ export default function WidgetChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // اگر ویجت با ?voice=1 باز شده باشد (از دکمه‌ی میکروفون)، مستقیم حالت صوتی
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("voice") === "1") setVoiceOpen(true);
+  }, []);
+
   function submit() {
     if (!input.trim() || loading) return;
     send(input);
