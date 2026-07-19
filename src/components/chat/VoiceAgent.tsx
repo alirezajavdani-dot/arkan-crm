@@ -57,7 +57,8 @@ export default function VoiceAgent({ primaryColor = "#143A32" }: { primaryColor?
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const stop = useCallback(() => {
+  // فقط اتصال‌ها را می‌بندد؛ وضعیت را دست نمی‌زند (تا پیام خطا پاک نشود)
+  const cleanup = useCallback(() => {
     dcRef.current?.close();
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
@@ -66,8 +67,12 @@ export default function VoiceAgent({ primaryColor = "#143A32" }: { primaryColor?
     pcRef.current = null;
     streamRef.current = null;
     setSpeaking(false);
-    setStatus("idle");
   }, []);
+
+  const stop = useCallback(() => {
+    cleanup();
+    setStatus("idle");
+  }, [cleanup]);
 
   useEffect(() => () => stop(), [stop]);
 
@@ -190,7 +195,15 @@ export default function VoiceAgent({ primaryColor = "#143A32" }: { primaryColor?
         body: offer.sdp,
         headers: { Authorization: `Bearer ${session.token}`, "Content-Type": "application/sdp" },
       });
-      if (!sdpRes.ok) throw new Error("برقراری اتصال صوتی ناموفق بود.");
+      if (!sdpRes.ok) {
+        const body = await sdpRes.text().catch(() => "");
+        if (sdpRes.status === 429 || body.includes("insufficient_quota")) {
+          throw new Error(
+            "سرویس صوتی موقتاً در دسترس نیست (محدودیت اعتبار سرویس‌دهنده). لطفاً بعداً تلاش کنید یا از چت متنی استفاده کنید."
+          );
+        }
+        throw new Error("برقراری اتصال صوتی ناموفق بود. کمی بعد دوباره تلاش کنید.");
+      }
       await pc.setRemoteDescription({ type: "answer", sdp: await sdpRes.text() });
     } catch (e) {
       const err = e as Error;
@@ -199,10 +212,10 @@ export default function VoiceAgent({ primaryColor = "#143A32" }: { primaryColor?
           ? "دسترسی به میکروفون رد شد. برای گفتگوی صوتی باید اجازه دهید."
           : err.message || "خطا در راه‌اندازی گفتگوی صوتی."
       );
+      cleanup();
       setStatus("error");
-      stop();
     }
-  }, [handleEvent, stop]);
+  }, [handleEvent, cleanup]);
 
   const live = status === "live";
 
