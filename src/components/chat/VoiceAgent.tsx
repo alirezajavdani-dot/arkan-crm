@@ -172,15 +172,20 @@ export default function VoiceAgent({ primaryColor = "#143A32" }: { primaryColor?
       dcRef.current = dc;
       dc.addEventListener("message", handleEvent);
       dc.addEventListener("open", () => {
-        // ثبت ابزارها روی نشست
-        dc.send(JSON.stringify({ type: "session.update", session: { tools: TOOLS, tool_choice: "auto" } }));
+        // ثبت ابزارها روی نشست (schema نسخه GA)
+        dc.send(
+          JSON.stringify({
+            type: "session.update",
+            session: { type: "realtime", tools: TOOLS, tool_choice: "auto" },
+          })
+        );
         setStatus("live");
       });
 
       // ۳) تبادل SDP
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      const sdpRes = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(session.model)}`, {
+      const sdpRes = await fetch(`https://api.openai.com/v1/realtime/calls?model=${encodeURIComponent(session.model)}`, {
         method: "POST",
         body: offer.sdp,
         headers: { Authorization: `Bearer ${session.token}`, "Content-Type": "application/sdp" },
