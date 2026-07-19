@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Logo from "@/components/ui/Logo";
 import { useArkanChat, type ChatMsg, type Source } from "@/lib/useArkanChat";
 import { renderBold } from "./format";
+import VoiceAgent from "./VoiceAgent";
 
 const STARTERS = [
   "آرکان دقیقاً چه کمکی به کسب‌وکار من می‌کند؟",
@@ -15,6 +16,7 @@ const STARTERS = [
 export default function ChatPanel() {
   const { messages, loading, send } = useArkanChat({ channel: "web", storageKey: "arkan_conv" });
   const [input, setInput] = useState("");
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -45,14 +47,27 @@ export default function ChatPanel() {
           <a href="/" className="rounded-btn" aria-label="آرکان — خانه">
             <Logo />
           </a>
-          <a
-            href="/#consultation"
-            className="inline-flex items-center gap-1.5 rounded-btn bg-pine px-4 py-2 text-caption font-medium text-bone transition-colors hover:bg-pine-dark"
-          >
-            درخواست مشاوره
-          </a>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setVoiceOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-btn border border-pine/30 bg-white px-3.5 py-2 text-caption font-medium text-pine transition-colors hover:bg-sand"
+              aria-label="گفتگوی صوتی با دستیار"
+            >
+              <MicIcon />
+              گفتگوی صوتی
+            </button>
+            <a
+              href="/#consultation"
+              className="inline-flex items-center gap-1.5 rounded-btn bg-pine px-4 py-2 text-caption font-medium text-bone transition-colors hover:bg-pine-dark"
+            >
+              درخواست مشاوره
+            </a>
+          </div>
         </div>
       </header>
+
+      {voiceOpen && <VoiceModal onClose={() => setVoiceOpen(false)} />}
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto flex min-h-full max-w-3xl flex-col px-5 py-6">
@@ -98,6 +113,55 @@ export default function ChatPanel() {
         </div>
       </div>
     </div>
+  );
+}
+
+function VoiceModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="گفتگوی صوتی با دستیار آرکان"
+    >
+      <div
+        className="w-full max-w-md rounded-card border border-sand bg-bone p-6 shadow-soft"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-heading text-h4 font-bold text-pine">گفتگوی صوتی</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-btn p-1.5 text-slate transition-colors hover:bg-sand hover:text-ink"
+            aria-label="بستن"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+        <p className="mb-4 text-center text-[0.8rem] text-slate">
+          مستقیم با دستیار آرکان صحبت کنید. سؤال‌تان را بپرسید و پاسخ را بشنوید.
+        </p>
+        <VoiceAgent />
+      </div>
+    </div>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </svg>
+  );
+}
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
   );
 }
 
